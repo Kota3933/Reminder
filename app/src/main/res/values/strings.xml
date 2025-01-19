@@ -1,3 +1,16 @@
 <resources>
     <string name="app_name">Swift Reminder</string>
+    <string name="et_prompt">タスクを入力</string>
+    <string name="bt_add">タスクを追加</string>
+    <string name="bt_timeSample">時刻を設定</string>
+    <string-array name="lv_taskNameSample">
+        <item>夕食を買う</item>
+        <item>課題を提出する</item>
+        <item>朝ゴミを出す</item>
+    </string-array>
+    <string-array name="lv_taskTimeSample">
+        <item>19:00</item>
+        <item>22:30</item>
+        <item>8:00</item>
+    </string-array>
 </resources>
