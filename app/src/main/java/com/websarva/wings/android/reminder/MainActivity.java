@@ -1,6 +1,7 @@
 package com.websarva.wings.android.reminder;
 
 import android.os.Bundle;
+import android.view.View;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 
@@ -9,6 +10,8 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -42,5 +45,15 @@ public class MainActivity extends AppCompatActivity {
         int[] to = {android.R.id.text1, android.R.id.text2};
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
         lvTask.setAdapter(adapter);
+
+        FloatingActionButton fab = findViewById(R.id.fab);
+        fab.setOnClickListener(new FABListener());
+    }
+
+    private class FABListener implements View.OnClickListener{
+        @Override
+        public void onClick(View view){
+
+        }
     }
 }
