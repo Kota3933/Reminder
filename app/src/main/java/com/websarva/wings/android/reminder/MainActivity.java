@@ -53,7 +53,13 @@ public class MainActivity extends AppCompatActivity {
     private class FABListener implements View.OnClickListener{
         @Override
         public void onClick(View view){
-
+            TaskAddDialogFragment dialogFragment = new TaskAddDialogFragment();
+            dialogFragment.show(getSupportFragmentManager(), "TaskAddDialogFragment");
         }
+    }
+
+    public void MakeFragment(){
+        TaskAddDialogFragment dialogFragment = new TaskAddDialogFragment();
+        dialogFragment.show(getSupportFragmentManager(), "TaskAddDialogFragment");
     }
 }
