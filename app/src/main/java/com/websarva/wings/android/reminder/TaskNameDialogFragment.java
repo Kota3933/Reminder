@@ -21,28 +21,18 @@ public class TaskNameDialogFragment extends DialogFragment {
                 .setPositiveButton(R.string.taskNameInput_bt_ok, new DialogInterface.OnClickListener() {
                     @Override
                     public void onClick(DialogInterface dialog, int id) {
-                        //時刻入力ダイアログを呼び出す
+                        //「次へ」をタップすると時刻入力ダイアログを表示
+                        TaskTimeDialogFragment dialogFragment = new TaskTimeDialogFragment();
+                        dialogFragment.show(getParentFragmentManager(), "TimePicker");
                     }
                 })
                 .setNegativeButton(R.string.taskNameInput_bt_ng, new DialogInterface.OnClickListener(){
                     public void onClick(DialogInterface dialog, int id){
+                        //「キャンセル」をタップすると消える
                         TaskNameDialogFragment.this.getDialog().cancel();
                     }
                 });
         return builder.create();
     }
 
-    public class DialogButtonClickListener implements DialogInterface.OnClickListener{
-        @Override
-        public void onClick(DialogInterface dialog, int which){
-            switch(which){
-                case DialogInterface.BUTTON_POSITIVE:
-                    TaskNameDialogFragment dialogFragment = new TaskNameDialogFragment();
-                    dialogFragment.show(getParentFragmentManager(), "TaskNameDialogFragment");
-                    break;
-                case DialogInterface.BUTTON_NEGATIVE:
-                    break;
-            }
-        }
-    }
 }
