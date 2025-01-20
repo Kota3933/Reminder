@@ -3,6 +3,14 @@
     <string name="et_prompt">タスクを入力</string>
     <string name="bt_add">タスクを追加</string>
     <string name="bt_timeSample">時刻を設定</string>
+    <string name="dialog_title">テストダイアログ</string>
+    <string name="dialog_msg">テストダイアログメッセージ</string>
+    <string name="dialog_btn_ok">OK</string>
+    <string name="dialog_btn_ng">キャンセル</string>
+    <string name="taskNameInput_tv_taskNameInput">タスク名を入力してください</string>
+    <string name="taskNameInput_prompt">タスク名を入力</string>
+    <string name="taskNameInput_bt_ok">次へ</string>
+    <string name="taskNameInput_bt_ng">キャンセル</string>
     <string-array name="lv_taskNameSample">
         <item>夕食を買う</item>
         <item>課題を提出する</item>
