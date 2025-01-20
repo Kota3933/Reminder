@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,8 +40,17 @@ public class TaskNameDialogFragment extends DialogFragment {
                         result.putString("taskName", taskName);
                         manager.setFragmentResult("taskNameRequest", result);
 
-                        //時刻入力ダイアログを呼び出す
-                        dialogFragment.show(manager, "TimePicker");
+                        //タスク名が空欄かチェック
+                        if(!taskName.isEmpty()){
+                            //時刻入力ダイアログを呼び出す
+                            dialogFragment.show(manager, "TimePicker");
+                        }else{
+                            String msg = "タスク名を入力してください";
+                            Toast.makeText(getActivity(),msg,Toast.LENGTH_SHORT).show();
+                            //トースト表示後もう一度タスク名を入力させる
+                            TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
+                            dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");
+                        }
                     }
                 })
                 .setNegativeButton(R.string.taskNameInput_bt_ng, new DialogInterface.OnClickListener(){
