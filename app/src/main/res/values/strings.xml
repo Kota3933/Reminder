@@ -7,8 +7,8 @@
     <string name="dialog_msg">テストダイアログメッセージ</string>
     <string name="dialog_btn_ok">OK</string>
     <string name="dialog_btn_ng">キャンセル</string>
-    <string name="taskNameInput_tv_taskNameInput">タスク名を入力してください</string>
-    <string name="taskNameInput_prompt">タスク名を入力</string>
+    <string name="taskNameInput_tv_taskNameInput">後で思い出したいことを\n入力してください</string>
+    <string name="taskNameInput_prompt">思い出したいことを入力</string>
     <string name="taskNameInput_bt_ok">次へ</string>
     <string name="taskNameInput_bt_ng">キャンセル</string>
     <string-array name="lv_taskNameSample">

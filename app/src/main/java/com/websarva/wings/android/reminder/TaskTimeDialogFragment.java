@@ -51,8 +51,14 @@ public class TaskTimeDialogFragment extends DialogFragment implements TimePicker
 
 
     public void onTimeSet(TimePicker view, int hourOfDay, int minute){
-        String msg = "「" + taskName + "」を"+ hourOfDay + "時" + minute + "分に設定しました";
-        Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+        //String msg = "「" + taskName + "」を"+ hourOfDay + "時" + minute + "分に設定しました";
+        //Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
+
+        Bundle result = new Bundle();
+        result.putInt("taskTime_hour", hourOfDay);
+        result.putInt("taskTime_minute", minute);
+        FragmentManager manager = getParentFragmentManager();
+        manager.setFragmentResult("taskTimeRequest", result);
     }
 
     @Override
