@@ -25,7 +25,7 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
-    List<Map<String,String>> taskList = new ArrayList<>();
+    List<Map<String,Object>> taskList = new ArrayList<>();
     String taskName = "";
     int taskTime_hour;
     int taskTime_min;
@@ -42,15 +42,15 @@ public class MainActivity extends AppCompatActivity {
             return insets;
         });
 
-
-        makeSampleTasks();
+        //リストビュー設定
+        ListView lvTask = findViewById(R.id.lvTask);
+        //makeSampleTasks();
         String[] from = {"name", "time"};
         int[] to = {android.R.id.text1, android.R.id.text2};
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
-
-        ListView lvTask = findViewById(R.id.lvTask);
         lvTask.setAdapter(adapter);
 
+        //FAB設定
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new FABListener());
 
@@ -71,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
 
                 String msg = "「" + taskName + "」を"+ taskTime_hour + "時" + taskTime_min + "分に設定しました";
                 Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
+                ListTaskAdd(taskName, taskTime_hour, taskTime_min);
             }
         });
     }
@@ -83,9 +84,9 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-
+    //リストにサンプルタスクを追加する（UI確認）
     public void makeSampleTasks(){
-        Map<String, String> task = new HashMap<>();
+        Map<String, Object> task = new HashMap<>();
         task.put("name", "夕食を買う");
         task.put("time", "19:00");
         taskList.add(task);
@@ -98,4 +99,39 @@ public class MainActivity extends AppCompatActivity {
         task.put("time", "8:00");
         taskList.add(task);
     }
+
+    //タスクをリストに追加する
+    public void ListTaskAdd(String taskName, int hour, int min){
+        //時・分を時刻表示に変換
+        String time = hour + ":" + min;
+        //リストに追加
+        Map<String, Object> task = new HashMap<>();
+        task.put("name", taskName);
+        task.put("time", time);
+        task.put("hour", hour);
+        task.put("min", min);
+        task.put("minConverted", (60*hour + min)); //分に換算すると何分か。並べ替えに使用
+        taskList.add(task);
+        //リストを時刻順に並べ替え
+        //難しいので後でやる
+        //リストUIを更新
+        String[] from = {"name", "time"};
+        int[] to = {android.R.id.text1, android.R.id.text2};
+        SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
+        ListView lvTask = findViewById(R.id.lvTask);
+        lvTask.setAdapter(adapter);
+    }
+
+    //「20:30」のような時刻を時間と分に変換し、Bundleに入れて返す関数。使わないかも
+    public Bundle TimeToHourAndMin(String time){
+        int hour, min;
+        int colonAt = time.indexOf(":");
+        Bundle ans = new Bundle();
+        hour = Integer.parseInt(time.substring(0,colonAt-1));
+        min = Integer.parseInt(time.substring(colonAt+1, time.length()-1));
+        ans.putInt("hour", hour);
+        ans.putInt("min", min);
+        return ans;
+    }
+
 }

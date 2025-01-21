@@ -20,25 +20,6 @@ import java.util.Calendar;
 
 public class TaskTimeDialogFragment extends DialogFragment implements TimePickerDialog.OnTimeSetListener, TimePickerDialog.OnCancelListener{
 
-    String taskName; //前のダイアログで入力されたタスク名
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstance){
-        super.onCreate(savedInstance);
-        //setContentView(R.layout.activity_main);
-        //ダイアログの生成時にFragmentManagerからタスク名を受け取る
-        //親FragmentManagerを取得
-        FragmentManager manager = getParentFragmentManager();
-        //requestKeyで指定したBundleの中からタスク名の文字列を取得する
-        manager.setFragmentResultListener("taskNameRequest", this, new FragmentResultListener() {
-            @Override
-            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
-                taskName = result.getString("taskName");
-                Log.i("BundleCheck", "受け取った文字列："+taskName);
-            }
-        });
-    }
-
     @Override
     public Dialog onCreateDialog(Bundle savedInstanceState){
         final Calendar c = Calendar.getInstance();
