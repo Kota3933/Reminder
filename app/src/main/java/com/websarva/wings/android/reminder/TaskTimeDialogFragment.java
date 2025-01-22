@@ -35,6 +35,7 @@ public class TaskTimeDialogFragment extends DialogFragment implements TimePicker
         //String msg = "「" + taskName + "」を"+ hourOfDay + "時" + minute + "分に設定しました";
         //Toast.makeText(getActivity(), msg, Toast.LENGTH_LONG).show();
 
+        //設定時刻をBundleに格納し送信
         Bundle result = new Bundle();
         result.putInt("taskTime_hour", hourOfDay);
         result.putInt("taskTime_minute", minute);
@@ -44,7 +45,7 @@ public class TaskTimeDialogFragment extends DialogFragment implements TimePicker
 
     @Override
     public void onCancel(DialogInterface dialog){
-        //「キャンセル」をタップするとタスク名入力ダイアログを表示
+        //「キャンセル」をタップするとタスク名入力ダイアログを表示する
         TaskNameDialogFragment dialogFragment = new TaskNameDialogFragment();
         dialogFragment.show(getParentFragmentManager(), "TaskNameDialog");
     }

@@ -54,7 +54,6 @@ public class TaskNameDialogFragment extends DialogFragment {
                                 TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
                                 dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");
                             }
-
                         }else{
                             //タスク名が空欄なので再度入力させる
                             String msg = "タスク名を入力してください";
