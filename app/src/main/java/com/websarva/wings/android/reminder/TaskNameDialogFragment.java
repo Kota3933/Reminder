@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -39,8 +40,27 @@ public class TaskNameDialogFragment extends DialogFragment {
                         result.putString("taskName", taskName);
                         manager.setFragmentResult("taskNameRequest", result);
 
-                        //時刻入力ダイアログを呼び出す
-                        dialogFragment.show(manager, "TimePicker");
+                        //タスク名が要件を満たしているかチェックを行う
+                        //タスク名が空欄かチェック
+                        if(!taskName.isEmpty()){
+                            //タスク名が20文字を超えていないかチェック
+                            if(taskName.length() <= 20){
+                                //タスク名が条件を満たしている。時刻入力ダイアログを呼び出す
+                                dialogFragment.show(manager, "TimePicker");
+                            }else{
+                                //タスク名が20文字より多いので再度入力させる
+                                String msg = "20文字以下で入力してください";
+                                Toast.makeText(getActivity(),msg,Toast.LENGTH_SHORT).show();
+                                TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
+                                dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");
+                            }
+                        }else{
+                            //タスク名が空欄なので再度入力させる
+                            String msg = "タスク名を入力してください";
+                            Toast.makeText(getActivity(),msg,Toast.LENGTH_SHORT).show();
+                            TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
+                            dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");
+                        }
                     }
                 })
                 .setNegativeButton(R.string.taskNameInput_bt_ng, new DialogInterface.OnClickListener(){
