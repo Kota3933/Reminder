@@ -20,6 +20,7 @@ import androidx.fragment.app.FragmentResultListener;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -93,13 +94,27 @@ public class MainActivity extends AppCompatActivity {
         }else{
             time = hour + ":" + min;
         }
+
+        //翌日のタスクかどうかチェック・調整
+        //現在時刻の取得
+        final Calendar c = Calendar.getInstance();
+        int curHour = c.get(Calendar.HOUR_OF_DAY);
+        int curMin = c.get(Calendar.MINUTE);
+        //テスト調整
+        curHour = 14; curMin = 30;
+
+        //翌日のタスクなら、時刻表示を調整する
+        if((hour*60 + min) - (curHour*60 + curMin) < 0){
+            time = "翌日"+time;
+        }
+
         //リストに追加
         Map<String, Object> task = new HashMap<>();
         task.put("name", taskName);
         task.put("time", time);
         task.put("hour", hour);
         task.put("min", min);
-        task.put("minConverted", (60*hour + min)); //分に換算すると何分か。並べ替えに使用
+        task.put("minFromNow", -1); //並べ替え先で設定する
         taskList.add(task);
         //リストを時刻順に並べ替え
         taskList = DataProcess.bs_Execute(taskList);

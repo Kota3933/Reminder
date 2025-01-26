@@ -31,12 +31,12 @@ public class TaskNameDialogFragment extends DialogFragment {
                         TaskTimeDialogFragment dialogFragment = new TaskTimeDialogFragment();
                         FragmentManager manager = getParentFragmentManager();
 
-                        //タスク名を取得、Bundleに格納
+                        //タスク名を取得、Bundleに格納・送信
                         Bundle result = new Bundle();
                         String taskName;
                         EditText etTaskName = view.findViewById(R.id.etTaskName);
                         taskName = etTaskName.getText().toString();
-                        Log.i("BundleCheck", "格納した文字列："+taskName);
+                        //Log.i("BundleCheck", "格納した文字列："+taskName);
                         result.putString("taskName", taskName);
                         manager.setFragmentResult("taskNameRequest", result);
 
@@ -49,14 +49,14 @@ public class TaskNameDialogFragment extends DialogFragment {
                                 dialogFragment.show(manager, "TimePicker");
                             }else{
                                 //タスク名が20文字より多いので再度入力させる
-                                String msg = "20文字以下で入力してください";
+                                String msg = getString(R.string.taskNameDialog_warning_tooLong);
                                 Toast.makeText(getActivity(),msg,Toast.LENGTH_SHORT).show();
                                 TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
                                 dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");
                             }
                         }else{
                             //タスク名が空欄なので再度入力させる
-                            String msg = "タスク名を入力してください";
+                            String msg = getString(R.string.taskNameDialog_warning_empty);
                             Toast.makeText(getActivity(),msg,Toast.LENGTH_SHORT).show();
                             TaskNameDialogFragment dialogFragment_self = new TaskNameDialogFragment();
                             dialogFragment_self.show(getParentFragmentManager(), "TaskNameDialogFragment");

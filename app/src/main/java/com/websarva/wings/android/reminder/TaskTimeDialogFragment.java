@@ -25,7 +25,7 @@ public class TaskTimeDialogFragment extends DialogFragment implements TimePicker
         final Calendar c = Calendar.getInstance();
         int hour = c.get(Calendar.HOUR_OF_DAY);
         int minute = c.get(Calendar.MINUTE);
-        TimePickerDialog dialog = new TimePickerDialog(getActivity(), this, hour, minute, DateFormat.is24HourFormat(getActivity()));
+        TimePickerDialog dialog = new TimePickerDialog(getActivity(), this, hour, minute+1, DateFormat.is24HourFormat(getActivity()));
         return dialog;
     }
 
