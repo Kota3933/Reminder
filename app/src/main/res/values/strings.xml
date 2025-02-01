@@ -13,6 +13,9 @@
     <string name="taskNameInput_bt_ng">キャンセル</string>
     <string name="taskNameDialog_warning_tooLong">20文字以下で入力してください</string>
     <string name="taskNameDialog_warning_empty">タスク名を入力してください</string>
+    <string name="notification_channel_name">通知</string>
+    <string name="notification_title">の時間です！</string>
+    <string name="notification_text">の時間になりました</string>
     <string-array name="lv_taskNameSample">
         <item>夕食を買う</item>
         <item>課題を提出する</item>

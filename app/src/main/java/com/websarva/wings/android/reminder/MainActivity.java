@@ -1,9 +1,12 @@
 package com.websarva.wings.android.reminder;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.Toast;
@@ -11,6 +14,8 @@ import android.widget.Toast;
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.app.NotificationManagerCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
@@ -34,6 +39,7 @@ public class MainActivity extends AppCompatActivity {
     String taskName = "";
     int taskTime_hour;
     int taskTime_min;
+    private final String CHANNEL_ID = "notificationservice_notification_channel";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,6 +58,7 @@ public class MainActivity extends AppCompatActivity {
         int[] to = {android.R.id.text1, android.R.id.text2};
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
         lvTask.setAdapter(adapter);
+        lvTask.setOnItemClickListener(new TaskListListener());
 
         //FAB設定
         FloatingActionButton fab = findViewById(R.id.fab);
@@ -85,6 +92,31 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private class TaskListListener implements AdapterView.OnItemClickListener{
+        @Override
+        public void onItemClick(AdapterView<?> parent, View view, int position, long id){
+            //タスク情報取得
+            Map<String,Object> map = (Map<String,Object>)parent.getItemAtPosition(position);
+            String taskName = (String)map.get("name");
+            int taskHour = (int)map.get("hour");
+            int taskMin = (int)map.get("min");
+
+            //テスト通知送信
+            /*
+            Intent intent = new Intent(MainActivity.this, NotificationService.class);
+            startService(intent);
+
+            NotificationCompat.Builder builder = new NotificationCompat.Builder(NotificationService.getService(), CHANNEL_ID);
+            builder.setSmallIcon(android.R.drawable.ic_dialog_info);
+            builder.setContentTitle(taskName + getString(R.string.notification_title));
+            builder.setContentText(taskName + getString(R.string.notification_text));
+            Notification notification = builder.build();
+            NotificationManagerCompat manager = NotificationManagerCompat.from(NotificationService.getService());
+            manager.notify(100, notification);
+             */
+        }
+    }
+
     //タスクをリストに追加する
     public void ListTaskAdd(String taskName, int hour, int min){
         //時・分を時刻表示に変換
@@ -95,17 +127,14 @@ public class MainActivity extends AppCompatActivity {
             time = hour + ":" + min;
         }
 
-        //翌日のタスクかどうかチェック・調整
         //現在時刻の取得
         final Calendar c = Calendar.getInstance();
         int curHour = c.get(Calendar.HOUR_OF_DAY);
         int curMin = c.get(Calendar.MINUTE);
-        //テスト調整
-        curHour = 14; curMin = 30;
 
         //翌日のタスクなら、時刻表示を調整する
         if((hour*60 + min) - (curHour*60 + curMin) < 0){
-            time = "翌日"+time;
+            time = "明日"+time;
         }
 
         //リストに追加
