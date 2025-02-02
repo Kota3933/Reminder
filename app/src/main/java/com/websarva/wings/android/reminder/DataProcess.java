@@ -1,7 +1,12 @@
 package com.websarva.wings.android.reminder;
 
+import android.content.Context;
+import android.database.Cursor;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteStatement;
 import android.util.Log;
 
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
@@ -10,7 +15,16 @@ import java.util.Map;
 public class DataProcess {
 
     public static int bs_count = 1;
-    //バブルソート関連関数：バブルソート実行
+    private static DatabaseHelper helper;
+    private static MainActivity _mainActivity;
+
+    //TaskData関連：MainActivityのインスタンスを取得、ヘルパーオブジェクトを生成
+    public static void SetmainActivity(MainActivity activity){
+        _mainActivity = activity;
+        helper = new DatabaseHelper(_mainActivity);
+    }
+
+    //バブルソート関連：バブルソート実行
     public static List<Map<String,Object>> bs_Execute (List<Map<String,Object>> taskList){
 
         int i,j,min1,min2;
@@ -50,7 +64,7 @@ public class DataProcess {
         return taskList;
     }
 
-    //バブルソート関連関数：並べ替え経過表示
+    //バブルソート関連：並べ替え経過表示
     public static void bs_ListPrint (List<Map<String, Object>> list, int time, int count){
         int i;
         int size = list.size();
@@ -60,7 +74,7 @@ public class DataProcess {
         }
     }
 
-    //バブルソート関連関数：Mapオブジェクト入れ替え
+    //バブルソート関連：Mapオブジェクト入れ替え
     public static List<Map<String,Object>>  bs_MapSwap (List<Map<String,Object>> taskList, int i){
         Map<String, Object> tmp = new HashMap<>();
 
@@ -86,5 +100,107 @@ public class DataProcess {
         taskList.get(i+1).replace("minFromNow", tmp.get("minFromNow"));
 
         return taskList;
+    }
+
+    //TaskData関連:アプリ立ち上げ時に起動し、DBのタスク内容を全てALに反映する
+    public static void SQLInitial(List<Map<String, Object>> list, Context context){
+        String sql = "SELECT * FROM taskdata";
+        SQLiteDatabase db = helper.getWritableDatabase();
+        Cursor cursor = db.rawQuery(sql, null);
+
+        int idx;
+        String taskName;
+        int hour, min;
+        while(cursor.moveToNext()){
+            idx = cursor.getColumnIndex("name");
+            taskName = cursor.getString(idx);
+            idx = cursor.getColumnIndex("hour");
+            hour = cursor.getInt(idx);
+            idx = cursor.getColumnIndex("min");
+            min = cursor.getInt(idx);
+            list = InsertToAL(list, taskName, hour, min);
+        }
+        cursor.close();
+    }
+
+    //TaskData関連：新規のタスクをDBとALに追加する
+    public static void TaskInsert(List<Map<String,Object>> list, String taskName, int hour, int min){
+        //DBに追加
+        InsertToDB(taskName, hour, min);
+        //ALに追加
+        _mainActivity.taskList = InsertToAL(list, taskName, hour, min);
+    }
+
+    //TaskData関連：DBに新規のタスクを追加する
+    public static void InsertToDB(String taskName, int hour, int min){
+        SQLiteDatabase db = helper.getReadableDatabase();
+
+        //まずDBにいくつのデータが入っているか取得し、新規の_idを決める
+        int elementNum=0;
+        String sqlCount = "SELECT * FROM taskdata";
+        Cursor cursor = db.rawQuery(sqlCount, null);
+        while(cursor.moveToNext()){
+            elementNum++;
+        }
+
+        //DBに追加
+        String sqlInsert = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?, ?, ?, ?)";
+        SQLiteStatement stmt = db.compileStatement(sqlInsert);
+        stmt.bindLong(1,elementNum+1);
+        stmt.bindString(2,taskName);
+        stmt.bindLong(3,hour);
+        stmt.bindLong(4,min);
+        stmt.execute();
+
+        cursor.close();
+    }
+
+    //TaskData関連：ALに新規のタスクを追加する
+    public static List<Map<String,Object>> InsertToAL(List<Map<String,Object>> list, String taskName, int hour, int min){
+
+        //時・分を時刻表示に変換
+        String time;
+        if(min<10){
+            time = hour + ":0" + min;
+        }else{
+            time = hour + ":" + min;
+        }
+
+        //現在時刻の取得
+        final Calendar c = Calendar.getInstance();
+        int curHour = c.get(Calendar.HOUR_OF_DAY);
+        int curMin = c.get(Calendar.MINUTE);
+
+        //翌日のタスクなら、時刻表示を調整する
+        if((hour*60 + min) - (curHour*60 + curMin) < 0){
+            time = "明日"+time;
+        }
+
+        //リストに追加
+        Map<String, Object> task = new HashMap<>();
+        task.put("name", taskName);
+        task.put("time", time);
+        task.put("hour", hour);
+        task.put("min", min);
+        task.put("minFromNow", -1); //並べ替え先で設定する
+        list.add(task);
+        //リストを時刻順に並べ替え
+        list = bs_Execute(list);
+
+        //リストUIの更新（MainActivityで行う）
+        _mainActivity.ListUIUpdate(list);
+
+        return list;
+    }
+
+    //TaskData関連:DatabaseHelperオブジェクトの解放
+    public static void HelperRelease(){
+        helper.close();
+    }
+
+    public static void testSQLInsert(){
+        SQLiteDatabase db = helper.getWritableDatabase();
+        String sql = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?,?,?,?)";
+        SQLiteStatement stmt = db.compileStatement(sql);
     }
 }
