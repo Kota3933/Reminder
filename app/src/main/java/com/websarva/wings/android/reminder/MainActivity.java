@@ -2,6 +2,7 @@ package com.websarva.wings.android.reminder;
 
 import android.app.Activity;
 import android.app.Notification;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -40,7 +41,7 @@ public class MainActivity extends AppCompatActivity {
     int taskTime_hour;
     int taskTime_min;
     private final String CHANNEL_ID = "notificationservice_notification_channel";
-
+    private MainActivity mainActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -64,6 +65,13 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new FABListener());
 
+        //自身のアクティビティのインスタンスを保存、送信
+        mainActivity = this;
+        DataProcess.SetmainActivity(mainActivity);
+
+        //データベース初期設定を実行
+        DataProcess.SQLInitial(taskList, MainActivity.this);
+
         //フラグメントからタスクの名前・時刻を受け取る
         FragmentManager manager = getSupportFragmentManager();
         manager.setFragmentResultListener("taskNameRequest", this, new FragmentResultListener() {
@@ -79,9 +87,16 @@ public class MainActivity extends AppCompatActivity {
                 taskTime_min = result.getInt("taskTime_minute");
                 String msg = "「" + taskName + "」を"+ taskTime_hour + "時" + taskTime_min + "分に設定しました";
                 Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
-                ListTaskAdd(taskName, taskTime_hour, taskTime_min);
+                //タスクをDB・ALへ追加
+                DataProcess.TaskInsert(taskList, taskName, taskTime_hour, taskTime_min);
             }
         });
+    }
+
+    @Override
+    protected void onDestroy(){
+        DataProcess.HelperRelease();
+        super.onDestroy();
     }
 
     private class FABListener implements View.OnClickListener{
@@ -117,7 +132,7 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    //タスクをリストに追加する
+    //（使わない）タスクをリストに追加する
     public void ListTaskAdd(String taskName, int hour, int min){
         //時・分を時刻表示に変換
         String time;
@@ -154,4 +169,14 @@ public class MainActivity extends AppCompatActivity {
         ListView lvTask = findViewById(R.id.lvTask);
         lvTask.setAdapter(adapter);
     }
+
+    public void ListUIUpdate(List<Map<String,Object>> list){
+        //AdapterでリストUIを更新する
+        String[] from = {"name", "time"};
+        int[] to = {android.R.id.text1, android.R.id.text2};
+        SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, list, android.R.layout.simple_list_item_2, from, to);
+        ListView lvTask = findViewById(R.id.lvTask);
+        lvTask.setAdapter(adapter);
+    }
+
 }
