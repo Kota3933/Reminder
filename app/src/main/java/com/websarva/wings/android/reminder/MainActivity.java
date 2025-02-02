@@ -67,7 +67,8 @@ public class MainActivity extends AppCompatActivity {
 
         //自身のアクティビティのインスタンスを保存、送信
         mainActivity = this;
-        DataProcess.SetmainActivity(mainActivity);
+        DataProcess.SetMainActivity(mainActivity);
+        AlarmBroadcastReceiver.SetMainActivity(mainActivity);
 
         //データベース初期設定を実行
         DataProcess.SQLInitial(taskList, MainActivity.this);
@@ -131,45 +132,6 @@ public class MainActivity extends AppCompatActivity {
              */
         }
     }
-
-    //（使わない）タスクをリストに追加する
-    public void ListTaskAdd(String taskName, int hour, int min){
-        //時・分を時刻表示に変換
-        String time;
-        if(min<10){
-            time = hour + ":0" + min;
-        }else{
-            time = hour + ":" + min;
-        }
-
-        //現在時刻の取得
-        final Calendar c = Calendar.getInstance();
-        int curHour = c.get(Calendar.HOUR_OF_DAY);
-        int curMin = c.get(Calendar.MINUTE);
-
-        //翌日のタスクなら、時刻表示を調整する
-        if((hour*60 + min) - (curHour*60 + curMin) < 0){
-            time = "明日"+time;
-        }
-
-        //リストに追加
-        Map<String, Object> task = new HashMap<>();
-        task.put("name", taskName);
-        task.put("time", time);
-        task.put("hour", hour);
-        task.put("min", min);
-        task.put("minFromNow", -1); //並べ替え先で設定する
-        taskList.add(task);
-        //リストを時刻順に並べ替え
-        taskList = DataProcess.bs_Execute(taskList);
-        //リストUIを更新
-        String[] from = {"name", "time"};
-        int[] to = {android.R.id.text1, android.R.id.text2};
-        SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
-        ListView lvTask = findViewById(R.id.lvTask);
-        lvTask.setAdapter(adapter);
-    }
-
     public void ListUIUpdate(List<Map<String,Object>> list){
         //AdapterでリストUIを更新する
         String[] from = {"name", "time"};

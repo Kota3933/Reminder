@@ -1,6 +1,9 @@
 package com.websarva.wings.android.reminder;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
@@ -19,7 +22,7 @@ public class DataProcess {
     private static MainActivity _mainActivity;
 
     //TaskData関連：MainActivityのインスタンスを取得、ヘルパーオブジェクトを生成
-    public static void SetmainActivity(MainActivity activity){
+    public static void SetMainActivity(MainActivity activity){
         _mainActivity = activity;
         helper = new DatabaseHelper(_mainActivity);
     }
@@ -129,6 +132,8 @@ public class DataProcess {
         InsertToDB(taskName, hour, min);
         //ALに追加
         _mainActivity.taskList = InsertToAL(list, taskName, hour, min);
+        //通知アラーム設定
+        AlarmSet(taskName, hour, min);
     }
 
     //TaskData関連：DBに新規のタスクを追加する
@@ -202,5 +207,37 @@ public class DataProcess {
         SQLiteDatabase db = helper.getWritableDatabase();
         String sql = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?,?,?,?)";
         SQLiteStatement stmt = db.compileStatement(sql);
+    }
+
+    //Notification関連：Alarm設定
+    public static void AlarmSet(String taskName, int hour, int min){
+
+        //通知時刻をミリ秒に変換する
+        //まず現在時刻と通知時刻の差分を計算
+        int curTime_inSec, notifyTime_inSec, difference;
+        Calendar c = Calendar.getInstance();
+        curTime_inSec = c.get(Calendar.HOUR_OF_DAY) *3600 + c.get(Calendar.MINUTE)*60 + c.get(Calendar.SECOND);
+        notifyTime_inSec = hour*3600 + min*60;
+        difference = notifyTime_inSec - curTime_inSec;
+        if(difference < 0){
+            difference+=24*3600; //マイナスの場合、翌日のタスクなので値を調整する
+        }
+        Log.i("Alarm", "計算した差分：" + difference + "秒");
+        //現在時刻のミリ秒を取得し、それに差分を足す
+        c.setTimeInMillis(System.currentTimeMillis());
+        c.add(Calendar.SECOND, difference);
+        //ミリ秒に変換
+        long notifyTime_inMilSec = c.getTimeInMillis();
+
+        //broadcastを設定
+        Intent intent = new Intent(_mainActivity, AlarmBroadcastReceiver.class);
+        intent.putExtra("name", taskName);
+        PendingIntent pending = PendingIntent.getBroadcast(_mainActivity, 0, intent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE );
+
+        //アラームをセットする
+        AlarmManager manager = (AlarmManager) _mainActivity.getSystemService(Context.ALARM_SERVICE);
+        if(manager != null){
+            manager.setExact(AlarmManager.RTC_WAKEUP, notifyTime_inMilSec, pending);
+        }
     }
 }
