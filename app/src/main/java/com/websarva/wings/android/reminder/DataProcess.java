@@ -1,28 +1,30 @@
 package com.websarva.wings.android.reminder;
 
+import android.app.AlarmManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class DataProcess {
 
     public static int bs_count = 1;
     private static DatabaseHelper helper;
     private static MainActivity _mainActivity;
-
-    //TaskData関連：MainActivityのインスタンスを取得、ヘルパーオブジェクトを生成
-    public static void SetmainActivity(MainActivity activity){
-        _mainActivity = activity;
-        helper = new DatabaseHelper(_mainActivity);
-    }
+    private static Context maContext;
 
     //バブルソート関連：バブルソート実行
     public static List<Map<String,Object>> bs_Execute (List<Map<String,Object>> taskList){
@@ -58,7 +60,7 @@ public class DataProcess {
                     taskList = bs_MapSwap(taskList, j);
                 }
             }
-            bs_ListPrint(taskList, i, bs_count);
+            //bs_ListPrint(taskList, i, bs_count);
         }
         bs_count++;
         return taskList;
@@ -102,105 +104,43 @@ public class DataProcess {
         return taskList;
     }
 
-    //TaskData関連:アプリ立ち上げ時に起動し、DBのタスク内容を全てALに反映する
-    public static void SQLInitial(List<Map<String, Object>> list, Context context){
-        String sql = "SELECT * FROM taskdata";
-        SQLiteDatabase db = helper.getWritableDatabase();
-        Cursor cursor = db.rawQuery(sql, null);
 
-        int idx;
-        String taskName;
-        int hour, min;
-        while(cursor.moveToNext()){
-            idx = cursor.getColumnIndex("name");
-            taskName = cursor.getString(idx);
-            idx = cursor.getColumnIndex("hour");
-            hour = cursor.getInt(idx);
-            idx = cursor.getColumnIndex("min");
-            min = cursor.getInt(idx);
-            list = InsertToAL(list, taskName, hour, min);
+    //TaskData関連：タスク削除
+    public static void TaskDelete(String taskName, Context context){
+        SQLiteOpenHelper _helper = new DatabaseHelper(context);
+
+        //DBからタスクを削除
+        //まず削除するタスクのIdを取得する
+        int deleteId = -1;
+        if(_helper == null){
+            Log.e("TaskDelete", "ヘルパーが取得できませんでした");
         }
-        cursor.close();
-    }
-
-    //TaskData関連：新規のタスクをDBとALに追加する
-    public static void TaskInsert(List<Map<String,Object>> list, String taskName, int hour, int min){
-        //DBに追加
-        InsertToDB(taskName, hour, min);
-        //ALに追加
-        _mainActivity.taskList = InsertToAL(list, taskName, hour, min);
-    }
-
-    //TaskData関連：DBに新規のタスクを追加する
-    public static void InsertToDB(String taskName, int hour, int min){
-        SQLiteDatabase db = helper.getReadableDatabase();
-
-        //まずDBにいくつのデータが入っているか取得し、新規の_idを決める
-        int elementNum=0;
-        String sqlCount = "SELECT * FROM taskdata";
-        Cursor cursor = db.rawQuery(sqlCount, null);
-        while(cursor.moveToNext()){
-            elementNum++;
-        }
-
-        //DBに追加
-        String sqlInsert = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?, ?, ?, ?)";
-        SQLiteStatement stmt = db.compileStatement(sqlInsert);
-        stmt.bindLong(1,elementNum+1);
-        stmt.bindString(2,taskName);
-        stmt.bindLong(3,hour);
-        stmt.bindLong(4,min);
-        stmt.execute();
-
-        cursor.close();
-    }
-
-    //TaskData関連：ALに新規のタスクを追加する
-    public static List<Map<String,Object>> InsertToAL(List<Map<String,Object>> list, String taskName, int hour, int min){
-
-        //時・分を時刻表示に変換
-        String time;
-        if(min<10){
-            time = hour + ":0" + min;
+        SQLiteDatabase db = _helper.getWritableDatabase();
+        String sqlSELECT = "SELECT _id FROM taskdata WHERE name = '" + taskName + "'";
+        Log.i("taskDelete", "完成したSQL文：" + sqlSELECT);
+        String[] bindName = {taskName};
+        Cursor cursor = db.rawQuery(sqlSELECT, null);
+        if(cursor.moveToNext()){
+            int idx = cursor.getColumnIndex("_id");
+            deleteId = cursor.getInt(idx);
         }else{
-            time = hour + ":" + min;
+            Log.e("TaskDelete", "削除するタスクが見つかりません");
         }
+        cursor.close();
+        //タスクを削除
+        String sqlDelete = "DELETE FROM taskdata WHERE _id = ?";
+        SQLiteStatement stmt = db.compileStatement(sqlDelete);
+        stmt.bindLong(1, deleteId);
+        stmt.executeUpdateDelete();
+        Log.i("TaskDelete", "DBからタスク「" + taskName + "」の削除完了");
 
-        //現在時刻の取得
-        final Calendar c = Calendar.getInstance();
-        int curHour = c.get(Calendar.HOUR_OF_DAY);
-        int curMin = c.get(Calendar.MINUTE);
+        //DBの内容をALと同期
+        //今はやらない
 
-        //翌日のタスクなら、時刻表示を調整する
-        if((hour*60 + min) - (curHour*60 + curMin) < 0){
-            time = "明日"+time;
-        }
-
-        //リストに追加
-        Map<String, Object> task = new HashMap<>();
-        task.put("name", taskName);
-        task.put("time", time);
-        task.put("hour", hour);
-        task.put("min", min);
-        task.put("minFromNow", -1); //並べ替え先で設定する
-        list.add(task);
-        //リストを時刻順に並べ替え
-        list = bs_Execute(list);
-
-        //リストUIの更新（MainActivityで行う）
-        _mainActivity.ListUIUpdate(list);
-
-        return list;
+        //完了のトースト表示
+        String msg = "「" + taskName + "」を削除しました";
+        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 
-    //TaskData関連:DatabaseHelperオブジェクトの解放
-    public static void HelperRelease(){
-        helper.close();
-    }
 
-    public static void testSQLInsert(){
-        SQLiteDatabase db = helper.getWritableDatabase();
-        String sql = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?,?,?,?)";
-        SQLiteStatement stmt = db.compileStatement(sql);
-    }
 }
