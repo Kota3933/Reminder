@@ -242,6 +242,7 @@ public class MainActivity extends AppCompatActivity {
         //broadcastを設定
         Intent intent = new Intent(MainActivity.this, AlarmBroadcastReceiver.class);
         intent.putExtra("name", taskName);
+        intent.putExtra("CHANNEL_ID", CHANNEL_ID);
         PendingIntent pending = PendingIntent.getBroadcast(MainActivity.this, 0, intent,PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE );
 
         //アラームをセットする
