@@ -3,7 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
+    <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
 
     <application
         android:allowBackup="true"
@@ -15,18 +15,21 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Reminder"
         tools:targetApi="31">
+        <service
+            android:name=".BackGroundDB"
+            android:enabled="true"
+            android:exported="false"></service>
+
         <receiver
             android:name=".AlarmBroadcastReceiver"
             android:enabled="true"
             android:exported="false"
-            android:process=":remote">
-        </receiver>
+            android:process=":remote"></receiver>
 
         <service
             android:name=".NotificationService"
             android:enabled="true"
-            android:exported="false">
-        </service>
+            android:exported="false"></service>
 
         <activity
             android:name=".MainActivity"

@@ -36,7 +36,7 @@ import java.util.Comparator;
 
 public class MainActivity extends AppCompatActivity {
 
-    List<Map<String,Object>> taskList = new ArrayList<>();
+    private List<Map<String,Object>> taskList = new ArrayList<>();
     String taskName = "";
     int taskTime_hour;
     int taskTime_min;
@@ -67,11 +67,12 @@ public class MainActivity extends AppCompatActivity {
 
         //自身のアクティビティのインスタンスを保存、送信
         mainActivity = this;
-        DataProcess.SetMainActivity(mainActivity);
-        AlarmBroadcastReceiver.SetMainActivity(mainActivity);
+        DataProcess.SetMainActivity(mainActivity, MainActivity.this);
 
         //データベース初期設定を実行
         DataProcess.SQLInitial(taskList, MainActivity.this);
+
+        DataProcess.test_taskListGetCheck();
 
         //フラグメントからタスクの名前・時刻を受け取る
         FragmentManager manager = getSupportFragmentManager();
@@ -139,6 +140,23 @@ public class MainActivity extends AppCompatActivity {
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, list, android.R.layout.simple_list_item_2, from, to);
         ListView lvTask = findViewById(R.id.lvTask);
         lvTask.setAdapter(adapter);
+    }
+
+    public List<Map<String,Object>> getTaskList(){
+        if(taskList == null){
+            Log.e("TaskDelete", "taskListを正常に返せませんでした");
+        }else{
+            Log.i("TaskDelete", "taskListを正常に返しました");
+        }
+        return taskList;
+    }
+
+    public void setTaskList(List<Map<String,Object>> list){
+        taskList = list;
+    }
+
+    public MainActivity getMainActivity(){
+        return this;
     }
 
 }

@@ -7,24 +7,35 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
+import android.os.Bundle;
 import android.util.Log;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class DataProcess {
 
     public static int bs_count = 1;
     private static DatabaseHelper helper;
     private static MainActivity _mainActivity;
+    private static Context maContext;
 
-    //TaskData関連：MainActivityのインスタンスを取得、ヘルパーオブジェクトを生成
-    public static void SetMainActivity(MainActivity activity){
+    //TaskData関連：MainActivityのインスタンス・コンテキストを取得、ヘルパーオブジェクトを生成
+    public static void SetMainActivity(MainActivity activity, Context context){
         _mainActivity = activity;
-        helper = new DatabaseHelper(_mainActivity);
+        if(_mainActivity == null){
+            Log.e("TaskDelete", "DataProcessでMainActivityの取得失敗");
+        }else{
+            Log.i("TaskDelete", "DataProcessでMainActivityのインスタンスをセット");
+        }
+
+        maContext = context;
+        helper = new DatabaseHelper(maContext);
     }
 
     //バブルソート関連：バブルソート実行
@@ -61,7 +72,7 @@ public class DataProcess {
                     taskList = bs_MapSwap(taskList, j);
                 }
             }
-            bs_ListPrint(taskList, i, bs_count);
+            //bs_ListPrint(taskList, i, bs_count);
         }
         bs_count++;
         return taskList;
@@ -131,7 +142,7 @@ public class DataProcess {
         //DBに追加
         InsertToDB(taskName, hour, min);
         //ALに追加
-        _mainActivity.taskList = InsertToAL(list, taskName, hour, min);
+        _mainActivity.setTaskList(InsertToAL(list, taskName, hour, min));
         //通知アラーム設定
         AlarmSet(taskName, hour, min);
     }
@@ -141,17 +152,21 @@ public class DataProcess {
         SQLiteDatabase db = helper.getReadableDatabase();
 
         //まずDBにいくつのデータが入っているか取得し、新規の_idを決める
-        int elementNum=0;
         String sqlCount = "SELECT * FROM taskdata";
         Cursor cursor = db.rawQuery(sqlCount, null);
+        int newId=-1;
         while(cursor.moveToNext()){
-            elementNum++;
+            int idx = cursor.getColumnIndex("_id");
+            newId = cursor.getInt(idx) + 1;
         }
+
+        Log.i("TaskDelete", "新idとして" + newId + "を使用");
+
 
         //DBに追加
         String sqlInsert = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?, ?, ?, ?)";
         SQLiteStatement stmt = db.compileStatement(sqlInsert);
-        stmt.bindLong(1,elementNum+1);
+        stmt.bindLong(1,newId);
         stmt.bindString(2,taskName);
         stmt.bindLong(3,hour);
         stmt.bindLong(4,min);
@@ -203,10 +218,71 @@ public class DataProcess {
         helper.close();
     }
 
-    public static void testSQLInsert(){
+
+    //TaskData関連：タスク削除
+    public static void TaskDelete(String name, Context context){
+        //DBからタスクを削除
+        /*
+        //バックグラウンドでDBを操作するため、サービスを起動
+        Intent intent = new Intent(maContext, BackGroundDBService.class);
+        Bundle extras = new Bundle();
+        extras.putString("operation", "delete");
+        extras.putString("name", name);
+        maContext.startService(intent);
+         */
+
+
+
+        helper = new DatabaseHelper(context);
+
+        //まず削除するタスクのIdを取得する
+        int deleteId = -1;
+        if(helper == null){
+            Log.e("TaskDelete", "ヘルパーが取得できませんでした");
+        }
         SQLiteDatabase db = helper.getWritableDatabase();
-        String sql = "INSERT INTO taskdata (_id, name, hour, min) VALUES (?,?,?,?)";
-        SQLiteStatement stmt = db.compileStatement(sql);
+        String sqlSELECT = "SELECT _id FROM taskdata WHERE name = 'お'";
+        String[] bindName = {name};
+        Cursor cursor = db.rawQuery(sqlSELECT, null);
+        if(cursor.moveToNext()){
+            int idx = cursor.getColumnIndex("_id");
+            deleteId = cursor.getInt(idx);
+        }else{
+            Log.e("TaskDelete", "削除するタスクが見つかりません");
+        }
+        cursor.close();
+        //タスクを削除
+        String sqlDelete = "DELETE FROM taskdata WHERE _id = ?";
+        SQLiteStatement stmt = db.compileStatement(sqlDelete);
+        stmt.bindLong(1, deleteId);
+        stmt.executeUpdateDelete();
+        Log.i("TaskDelete", "DBからタスク「" + name + "」の削除完了");
+
+        //ALからタスクを削除
+        if(_mainActivity == null){
+            Log.e("TaskDelete", "MainActivityのインスタンスを取得できませんでした");
+        }else{
+            Log.i("TaskDelete", "MainActivityのインスタンスの取得に成功");
+        }
+        if(_mainActivity.getTaskList() == null){
+            Log.e("TaskDelete", "MainActivityのtaskListを取得できませんでした");
+        }
+        int i;
+        List<Map<String,Object>> list = _mainActivity.getTaskList();
+        int size = list.size();
+        for(i=0 ; i<size ; i++){
+            Map<String, Object> map = _mainActivity.getTaskList().get(i);
+            if(map.get("name") == name){
+                list.remove(i);
+            }
+        }
+        _mainActivity.setTaskList(list);
+        _mainActivity.ListUIUpdate(_mainActivity.getTaskList());
+        Log.i("TaskDelete", "ALからタスク「" + name + "」の削除完了");
+
+        //完了のトースト表示
+        String msg = "「" + name + "」を削除しました";
+        Toast.makeText(maContext, msg, Toast.LENGTH_SHORT);
     }
 
     //Notification関連：Alarm設定
@@ -239,5 +315,8 @@ public class DataProcess {
         if(manager != null){
             manager.setExact(AlarmManager.RTC_WAKEUP, notifyTime_inMilSec, pending);
         }
+    }
+
+    public static void test_taskListGetCheck(){
     }
 }
