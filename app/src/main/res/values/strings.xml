@@ -16,6 +16,8 @@
     <string name="notification_channel_name">通知</string>
     <string name="notification_title">の時間です！</string>
     <string name="notification_text">の時間になりました</string>
+    <string name="contextMenu_edit">編集</string>
+    <string name="contextMenu_delete">削除</string>
     <string-array name="lv_taskNameSample">
         <item>夕食を買う</item>
         <item>課題を提出する</item>

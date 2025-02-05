@@ -11,6 +11,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteStatement;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ListView;
@@ -47,6 +50,8 @@ public class MainActivity extends AppCompatActivity {
     int taskTime_min;
     private static DatabaseHelper _helper;
     private final String CHANNEL_ID = "notificationservice_notification_channel";
+    private static int count = 0;
+    private static MainActivity instance;
     private MainActivity mainActivity;
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -65,15 +70,21 @@ public class MainActivity extends AppCompatActivity {
         int[] to = {android.R.id.text1, android.R.id.text2};
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, taskList, android.R.layout.simple_list_item_2, from, to);
         lvTask.setAdapter(adapter);
-        lvTask.setOnItemClickListener(new TaskListListener());
 
         //FAB設定
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new FABListener());
 
+        //コンテキストメニュー設定
+        registerForContextMenu(lvTask);
+
         //データベース初期設定を実行
         _helper = new DatabaseHelper(MainActivity.this);
         DBtoALSync(true);
+
+        //アクティビティのインスタンス送信
+        DataProcess.SetMainActivity(this);
+        instance = this;
 
         //フラグメントからタスクの名前・時刻を受け取る
         FragmentManager manager = getSupportFragmentManager();
@@ -110,30 +121,39 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private class TaskListListener implements AdapterView.OnItemClickListener{
-        @Override
-        public void onItemClick(AdapterView<?> parent, View view, int position, long id){
-            //タスク情報取得
-            Map<String,Object> map = (Map<String,Object>)parent.getItemAtPosition(position);
-            String taskName = (String)map.get("name");
-            int taskHour = (int)map.get("hour");
-            int taskMin = (int)map.get("min");
-
-            //テスト通知送信
-            /*
-            Intent intent = new Intent(MainActivity.this, NotificationService.class);
-            startService(intent);
-
-            NotificationCompat.Builder builder = new NotificationCompat.Builder(NotificationService.getService(), CHANNEL_ID);
-            builder.setSmallIcon(android.R.drawable.ic_dialog_info);
-            builder.setContentTitle(taskName + getString(R.string.notification_title));
-            builder.setContentText(taskName + getString(R.string.notification_text));
-            Notification notification = builder.build();
-            NotificationManagerCompat manager = NotificationManagerCompat.from(NotificationService.getService());
-            manager.notify(100, notification);
-             */
-        }
+    @Override
+    public void onCreateContextMenu(ContextMenu menu, View view, ContextMenu.ContextMenuInfo menuInfo){
+        super.onCreateContextMenu(menu, view, menuInfo);
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_context_menu_list, menu);
     }
+
+    @Override
+    public boolean onContextItemSelected(MenuItem item){
+        count++;
+        Log.i("contextMenu", count + "回目の呼び出し");
+
+        boolean returnVal = true;
+        AdapterView.AdapterContextMenuInfo info = (AdapterView.AdapterContextMenuInfo)item.getMenuInfo();
+        int listPosition = info.position;
+        Map<String, Object> map = taskList.get(listPosition);
+        String taskName = (String)map.get("name");
+        Log.i("contextMenu", "編集・削除するタスクの名前：" + taskName);
+
+        int itemId = item.getItemId();
+        if(itemId == R.id.menuListContextEdit){
+            //タスク編集ダイアログの表示
+        }else if(itemId == R.id.menuListContextDelete){
+            //タスク削除ダイアログの表示
+            TaskDeleteDialogFragment fragment = new TaskDeleteDialogFragment();
+            Bundle extras = new Bundle();
+            extras.putString("name", taskName);
+            fragment.setArguments(extras);
+            fragment.show(getSupportFragmentManager(), "TaskDeleteFragment");
+        }
+        return returnVal;
+    }
+
     public void ListUIUpdate(List<Map<String,Object>> list){
         //AdapterでリストUIを更新する
         String[] from = {"name", "time"};
@@ -254,14 +274,21 @@ public class MainActivity extends AppCompatActivity {
     }
 
     public void DBtoALSync(boolean UiUpdate){
-        Log.i("taskDB", "DBとALの同期開始");
+        Log.i("Sync", "DBとALの同期開始");
         //ALのタスク全削除
         int i;
         int size = taskList.size();
+        Log.i("Sync", "DBtoALSyncのAL全削除実行前の要素数：" + taskList.size());
+        /*
         for(i=0 ; i<size ; i++){
             Map<String, Object> map = taskList.get(i);
-            map.remove(i);
+            Log.i("Sync", map.get("name") + "を削除");
+            map.clear();
+            Log.i("Sync", "現在の要素数：" + taskList.size());
         }
+         */
+        taskList.clear();
+        Log.i("Sync", "DBtoALSyncのAL全削除実行後の要素数：" + taskList.size());
 
         //DBからタスクを読み取り全て追加
         String sql = "SELECT * FROM taskdata";
@@ -280,6 +307,7 @@ public class MainActivity extends AppCompatActivity {
             idx = cursor.getColumnIndex("min");
             min = cursor.getInt(idx);
             InsertToAL(taskName, hour, min);
+            Log.i("Sync", taskName + "をALに追加。size = " + taskList.size());
             count++;
         }
         cursor.close();
@@ -290,6 +318,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    public static MainActivity getInstance(){
+        if(instance == null){
+            Log.e("Sync", "インスタンス送信できず");
+        }
+        return instance;
+    }
 
 
 }

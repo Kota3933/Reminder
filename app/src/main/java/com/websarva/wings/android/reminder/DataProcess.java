@@ -1,5 +1,6 @@
 package com.websarva.wings.android.reminder;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -104,6 +105,9 @@ public class DataProcess {
         return taskList;
     }
 
+    public static void SetMainActivity(MainActivity activity){
+        _mainActivity = activity;
+    }
 
     //TaskData関連：タスク削除
     public static void TaskDelete(String taskName, Context context){
@@ -134,8 +138,13 @@ public class DataProcess {
         stmt.executeUpdateDelete();
         Log.i("TaskDelete", "DBからタスク「" + taskName + "」の削除完了");
 
+
+        if(MainActivity.getInstance() == null){
+            Log.e("Sync", "MainActivityのインスタンスを取得できませんでした");
+        }
+
         //DBの内容をALと同期
-        //今はやらない
+        //MainActivity.getInstance().DBtoALSync(true);
 
         //完了のトースト表示
         String msg = "「" + taskName + "」を削除しました";
