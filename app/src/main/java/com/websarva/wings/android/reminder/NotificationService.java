@@ -47,8 +47,5 @@ public class NotificationService extends Service {
         return START_NOT_STICKY;
     }
 
-    public static void TestNotification(String name, int hour, int min){
-    }
-
 
 }

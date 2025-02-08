@@ -30,7 +30,7 @@ public class AlarmBroadcastReceiver extends BroadcastReceiver {
         String taskName = intent.getStringExtra("name");
         String channelID = intent.getStringExtra("CHANNEL_ID");
         Log.i("Alarm",taskName + "の時刻になった！");
-        DataProcess.TaskDelete(taskName, context);
+        DataProcess.DBTaskDelete(taskName, context);
 
         //NotificationServiceの開始
         Intent serviceIntent = new Intent(context, NotificationService.class);

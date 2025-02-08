@@ -1,5 +1,6 @@
 package com.websarva.wings.android.reminder;
 
+import android.app.Activity;
 import android.app.AlarmManager;
 import android.app.PendingIntent;
 import android.content.Context;
@@ -22,9 +23,6 @@ import java.util.Objects;
 public class DataProcess {
 
     public static int bs_count = 1;
-    private static DatabaseHelper helper;
-    private static MainActivity _mainActivity;
-    private static Context maContext;
 
     //バブルソート関連：バブルソート実行
     public static List<Map<String,Object>> bs_Execute (List<Map<String,Object>> taskList){
@@ -104,9 +102,8 @@ public class DataProcess {
         return taskList;
     }
 
-
     //TaskData関連：タスク削除
-    public static void TaskDelete(String taskName, Context context){
+    public static void DBTaskDelete(String taskName, Context context){
         SQLiteOpenHelper _helper = new DatabaseHelper(context);
 
         //DBからタスクを削除
@@ -133,13 +130,6 @@ public class DataProcess {
         stmt.bindLong(1, deleteId);
         stmt.executeUpdateDelete();
         Log.i("TaskDelete", "DBからタスク「" + taskName + "」の削除完了");
-
-        //DBの内容をALと同期
-        //今はやらない
-
-        //完了のトースト表示
-        String msg = "「" + taskName + "」を削除しました";
-        Toast.makeText(context, msg, Toast.LENGTH_SHORT).show();
     }
 
 
