@@ -42,7 +42,7 @@ public class TaskDeleteDialogFragment extends DialogFragment {
                     Bundle extras = new Bundle();
                     extras.putString("taskName", taskName);
                     FragmentManager manager = getParentFragmentManager();
-                    manager.setFragmentResult("DeleteTaskNameRequest", extras);
+                    manager.setFragmentResult("taskDeleteRequest", extras);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;

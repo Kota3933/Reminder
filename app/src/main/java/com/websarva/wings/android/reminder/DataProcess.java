@@ -23,9 +23,6 @@ import java.util.Objects;
 public class DataProcess {
 
     public static int bs_count = 1;
-    private static DatabaseHelper helper;
-    private static MainActivity _mainActivity;
-    private static Context maContext;
 
     //バブルソート関連：バブルソート実行
     public static List<Map<String,Object>> bs_Execute (List<Map<String,Object>> taskList){
@@ -103,10 +100,6 @@ public class DataProcess {
         taskList.get(i+1).replace("minFromNow", tmp.get("minFromNow"));
 
         return taskList;
-    }
-
-    public static void SetMainActivity(MainActivity activity){
-        _mainActivity = activity;
     }
 
     //TaskData関連：タスク削除

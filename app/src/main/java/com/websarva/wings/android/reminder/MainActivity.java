@@ -51,8 +51,7 @@ public class MainActivity extends AppCompatActivity {
     private static DatabaseHelper _helper;
     private final String CHANNEL_ID = "notificationservice_notification_channel";
     private static int count = 0;
-    private static MainActivity instance;
-    private MainActivity mainActivity;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,10 +81,6 @@ public class MainActivity extends AppCompatActivity {
         _helper = new DatabaseHelper(MainActivity.this);
         DBtoALSync(true);
 
-        //アクティビティのインスタンス送信
-        DataProcess.SetMainActivity(this);
-        instance = this;
-
         //フラグメントからタスクの名前・時刻を受け取る
         FragmentManager manager = getSupportFragmentManager();
         manager.setFragmentResultListener("taskNameRequest", this, new FragmentResultListener() {
@@ -97,16 +92,42 @@ public class MainActivity extends AppCompatActivity {
         manager.setFragmentResultListener("taskTimeRequest", this, new FragmentResultListener() {
             @Override
             public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                String preTaskName;
                 taskTime_hour = result.getInt("taskTime_hour");
                 taskTime_min = result.getInt("taskTime_minute");
-                String msg = "「" + taskName + "」を"+ taskTime_hour + "時" + taskTime_min + "分に設定しました";
-                Toast.makeText(MainActivity.this, msg, Toast.LENGTH_LONG).show();
-                //タスクをDB・ALへ追加
-                TaskInsert(taskName, taskTime_hour, taskTime_min);
+                //タスク編集モードかどうか確認
+                if(result.getString("preTaskName") == null){
+                    //タスク新規追加モード
+                    TaskInsert(taskName, taskTime_hour, taskTime_min);
+                }else{
+                    //タスク編集モード
+                    preTaskName = result.getString("preTaskName");
+                    TaskEdit(preTaskName, taskName, taskTime_hour, taskTime_min);
+                }
+                //トーストメッセージ作成
+                final Calendar c = Calendar.getInstance();
+                int curHour = c.get(Calendar.HOUR_OF_DAY);
+                int curMin = c.get(Calendar.MINUTE);
+                int minConverted = taskTime_hour*60 + taskTime_min - (curHour*60 + curMin);
+                if(minConverted <= 0){
+                    minConverted += 24*60; //負の時は明日のタスクなので、時間を調整する
+                }
+                int hourFromNow = minConverted/60;
+                int minFromNow = minConverted%60;
+                StringBuilder sb = new StringBuilder();
+                sb.append("「" + taskName + "」を");
+                if(hourFromNow != 0){
+                    sb.append(hourFromNow + "時間");
+                }
+                if(minFromNow != 0){
+                    sb.append(minFromNow + "分");
+                }
+                sb.append("後に通知します");
+                Toast.makeText(MainActivity.this, sb.toString(), Toast.LENGTH_LONG).show();
             }
         });
         //フラグメントから削除するタスクの名前を受け取る
-        manager.setFragmentResultListener("DeleteTaskNameRequest", this, new FragmentResultListener() {
+        manager.setFragmentResultListener("taskDeleteRequest", this, new FragmentResultListener() {
             @Override
             public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
                 String deleteTaskName = result.getString("taskName");
@@ -154,13 +175,27 @@ public class MainActivity extends AppCompatActivity {
 
         int itemId = item.getItemId();
         if(itemId == R.id.menuListContextEdit){
-            //タスク編集ダイアログの表示
+            //編集前のタスク名・通知時刻を送信
+            TaskNameDialogFragment fragment = new TaskNameDialogFragment();
+            Bundle extras = new Bundle();
+            String preTaskName = (String) taskList.get(listPosition).get("name");
+            int preHour = (int) taskList.get(listPosition).get("hour");
+            int preMin = (int) taskList.get(listPosition).get("min");
+            extras.putString("preTaskName", preTaskName);
+            extras.putInt("preHour", preHour);
+            extras.putInt("preMin", preMin);
+            Log.i("TaskEdit", "編集前のタスク名：" + preTaskName);
+            Log.i("TaskEdit", "編集前のタスク時間：" + preHour + ":" + preMin);
+            fragment.setArguments(extras);
+            //タスク名入力ダイアログを表示
+            fragment.show(getSupportFragmentManager(), "TaskEditFragment");
         }else if(itemId == R.id.menuListContextDelete){
-            //タスク削除ダイアログの表示
+            //削除するタスク名を送信
             TaskDeleteDialogFragment fragment = new TaskDeleteDialogFragment();
             Bundle extras = new Bundle();
             extras.putString("name", taskName);
             fragment.setArguments(extras);
+            //タスク削除ダイアログの表示
             fragment.show(getSupportFragmentManager(), "TaskDeleteFragment");
         }
         return returnVal;
@@ -173,10 +208,6 @@ public class MainActivity extends AppCompatActivity {
         SimpleAdapter adapter = new SimpleAdapter(MainActivity.this, list, android.R.layout.simple_list_item_2, from, to);
         ListView lvTask = findViewById(R.id.lvTask);
         lvTask.setAdapter(adapter);
-    }
-
-    public List<Map<String,Object>> getTaskList(){
-        return taskList;
     }
 
     //TaskData関連：ALに新規のタスクを追加する
@@ -212,7 +243,6 @@ public class MainActivity extends AppCompatActivity {
         //Log.i("taskDB", "(InsertToAL)現時点の要素数：" + list.size());
         //リストを時刻順に並べ替え
         taskList = DataProcess.bs_Execute(taskList);
-
     }
 
     //TaskData関連：新規のタスクをDBとALに追加する
@@ -318,13 +348,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public static MainActivity getInstance(){
-        if(instance == null){
-            Log.e("Sync", "インスタンス送信できず");
-        }
-        return instance;
-    }
-
     public void ALTaskDelete(String taskName){
         int i, size;
         int idx = -1;
@@ -346,5 +369,12 @@ public class MainActivity extends AppCompatActivity {
         //完了のトースト表示
         String msg = "「" + taskName + "」を削除しました";
         Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+    }
+
+    public void TaskEdit(String preTaskName, String newTaskName, int newHour, int newMin){
+        //DBからタスクを削除
+        DataProcess.DBTaskDelete(preTaskName, MainActivity.this);
+        //新しくタスクを追加
+        TaskInsert(newTaskName, newHour, newMin);
     }
 }
