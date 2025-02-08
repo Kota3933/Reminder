@@ -105,6 +105,18 @@ public class MainActivity extends AppCompatActivity {
                 TaskInsert(taskName, taskTime_hour, taskTime_min);
             }
         });
+        //フラグメントから削除するタスクの名前を受け取る
+        manager.setFragmentResultListener("DeleteTaskNameRequest", this, new FragmentResultListener() {
+            @Override
+            public void onFragmentResult(@NonNull String requestKey, @NonNull Bundle result) {
+                String deleteTaskName = result.getString("taskName");
+                if(deleteTaskName == null){
+                    Log.e("TaskDelete", "削除するタスクの名前を受け取れませんでした");
+                }else{
+                    ALTaskDelete(deleteTaskName);
+                }
+            }
+        });
     }
 
     @Override
@@ -276,19 +288,7 @@ public class MainActivity extends AppCompatActivity {
     public void DBtoALSync(boolean UiUpdate){
         Log.i("Sync", "DBとALの同期開始");
         //ALのタスク全削除
-        int i;
-        int size = taskList.size();
-        Log.i("Sync", "DBtoALSyncのAL全削除実行前の要素数：" + taskList.size());
-        /*
-        for(i=0 ; i<size ; i++){
-            Map<String, Object> map = taskList.get(i);
-            Log.i("Sync", map.get("name") + "を削除");
-            map.clear();
-            Log.i("Sync", "現在の要素数：" + taskList.size());
-        }
-         */
         taskList.clear();
-        Log.i("Sync", "DBtoALSyncのAL全削除実行後の要素数：" + taskList.size());
 
         //DBからタスクを読み取り全て追加
         String sql = "SELECT * FROM taskdata";
@@ -325,5 +325,26 @@ public class MainActivity extends AppCompatActivity {
         return instance;
     }
 
-
+    public void ALTaskDelete(String taskName){
+        int i, size;
+        int idx = -1;
+        Map<String, Object> map = new HashMap<>();
+        size = taskList.size();
+        for(i=0 ; i<size ; i++){
+            map = taskList.get(i);
+            if(map.get("name") == taskName){
+                idx = i;
+            }
+        }
+        if(idx == -1){
+            Log.e("TaskDelete", "削除するタスクが見つかりませんでした");
+        }
+        map = taskList.get(idx);
+        taskList.remove(map);
+        //リストUIを更新
+        ListUIUpdate(taskList);
+        //完了のトースト表示
+        String msg = "「" + taskName + "」を削除しました";
+        Toast.makeText(MainActivity.this, msg, Toast.LENGTH_SHORT).show();
+    }
 }

@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.DialogFragment;
+import androidx.fragment.app.FragmentManager;
 
 public class TaskDeleteDialogFragment extends DialogFragment {
 
@@ -35,7 +36,13 @@ public class TaskDeleteDialogFragment extends DialogFragment {
         public void onClick(DialogInterface dialog, int which){
             switch(which){
                 case DialogInterface.BUTTON_POSITIVE:
-                    DataProcess.TaskDelete(taskName, getActivity());
+                    //DBからタスクを削除
+                    DataProcess.DBTaskDelete(taskName, getActivity());
+                    //MainActivityに削除するタスクの名前を送信
+                    Bundle extras = new Bundle();
+                    extras.putString("taskName", taskName);
+                    FragmentManager manager = getParentFragmentManager();
+                    manager.setFragmentResult("DeleteTaskNameRequest", extras);
                     break;
                 case DialogInterface.BUTTON_NEGATIVE:
                     break;
