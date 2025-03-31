@@ -27,3 +27,5 @@ Google Play Storeで一千万回以上ダウンロードされているあるリ
 ![Image](https://github.com/user-attachments/assets/a3a514ea-0ce8-4d08-8ed0-47a76bf816a1)
 
 ## 技術スタック
+言語：Java
+データベース：SQLite
