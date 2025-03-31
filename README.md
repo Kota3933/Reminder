@@ -23,5 +23,7 @@ Google Play Storeで一千万回以上ダウンロードされているあるリ
 
 という特色があります。
 
+![Image](https://github.com/user-attachments/assets/8ab47a69-f1b1-4697-97c9-2febf3bd3bea)
+![Image](https://github.com/user-attachments/assets/a3a514ea-0ce8-4d08-8ed0-47a76bf816a1)
 
 ## 技術スタック
