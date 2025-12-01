@@ -74,6 +74,10 @@ public class MainActivity extends AppCompatActivity {
         FloatingActionButton fab = findViewById(R.id.fab);
         fab.setOnClickListener(new FABListener());
 
+        //FAB設定（デバッグ用タスク全消去ボタン）
+        FloatingActionButton fab_delete = findViewById(R.id.fab_delete);
+        fab_delete.setOnClickListener(new FABListener_delete());
+
         //コンテキストメニュー設定
         registerForContextMenu(lvTask);
 
@@ -151,6 +155,14 @@ public class MainActivity extends AppCompatActivity {
         public void onClick(View view){
             TaskNameDialogFragment dialogFragment = new TaskNameDialogFragment();
             dialogFragment.show(getSupportFragmentManager(), "TaskNameDialogFragment");
+        }
+    }
+
+    //テスト用にタスクを全て消去するFAB
+    private class FABListener_delete implements View.OnClickListener{
+        @Override
+        public void onClick(View view){
+            TaskAllDelete(MainActivity.this);
         }
     }
 
@@ -376,5 +388,13 @@ public class MainActivity extends AppCompatActivity {
         DataProcess.DBTaskDelete(preTaskName, MainActivity.this);
         //新しくタスクを追加
         TaskInsert(newTaskName, newHour, newMin);
+    }
+
+    //デバッグ用
+    public void TaskAllDelete(Context context){
+        //DBからタスクを全削除
+        DataProcess.DBTaskAllDelete(MainActivity.this);
+        //AL更新
+        DBtoALSync(true);
     }
 }
