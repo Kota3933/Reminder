@@ -6,6 +6,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteStatement;
@@ -130,6 +131,24 @@ public class DataProcess {
         stmt.bindLong(1, deleteId);
         stmt.executeUpdateDelete();
         Log.i("TaskDelete", "DBからタスク「" + taskName + "」の削除完了");
+    }
+
+    //タスク全削除（デバッグ用）
+    public static void DBTaskAllDelete(Context context){
+        SQLiteOpenHelper _helper = new DatabaseHelper(context);
+        if(_helper == null){
+            Log.e("TaskDelete", "ヘルパーが取得できませんでした");
+        }
+        SQLiteDatabase db = _helper.getWritableDatabase();
+
+        //DBの要素の個数を取得
+        long count = DatabaseUtils.queryNumEntries(db, "taskdata");
+
+        //タスクを全削除
+        String sqlDeleteAll = "DELETE FROM taskdata";
+        SQLiteStatement stmt = db.compileStatement(sqlDeleteAll);
+        stmt.executeUpdateDelete();
+        Log.i("TaskDelete", "DBの全タスクを削除");
     }
 
 

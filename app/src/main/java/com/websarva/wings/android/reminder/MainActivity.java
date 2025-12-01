@@ -162,7 +162,7 @@ public class MainActivity extends AppCompatActivity {
     private class FABListener_delete implements View.OnClickListener{
         @Override
         public void onClick(View view){
-            Log.i("FAB", "タップされた");
+            TaskAllDelete(MainActivity.this);
         }
     }
 
@@ -388,5 +388,13 @@ public class MainActivity extends AppCompatActivity {
         DataProcess.DBTaskDelete(preTaskName, MainActivity.this);
         //新しくタスクを追加
         TaskInsert(newTaskName, newHour, newMin);
+    }
+
+    //デバッグ用
+    public void TaskAllDelete(Context context){
+        //DBからタスクを全削除
+        DataProcess.DBTaskAllDelete(MainActivity.this);
+        //AL更新
+        DBtoALSync(true);
     }
 }
